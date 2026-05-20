@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LIVE ランキング</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --card: #12121a;
+      --border: #1e1e2e;
+      --text: #e8e8ef;
+      --text-dim: #6e6e82;
+      --accent: #ff3366;
+      --accent2: #ff6b9d;
+      --gold: #ffd700;
+      --silver: #c0c0c0;
+      --bronze: #cd7f32;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px 16px;
+    }
+    .header {
+      text-align: center;
+      padding: 28px 0 20px;
+    }
+    .event-name {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #fff, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.4;
+    }
+    .event-period {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-dim);
+      letter-spacing: 0.5px;
+    }
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 4px 12px;
+      background: rgba(255, 51, 102, 0.15);
+      border: 1px solid rgba(255, 51, 102, 0.3);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    .update-info {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .header-divider {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 2px;
+      margin: 16px auto 0;
+    }
+    .loading {
+      text-align: center;
+      padding: 60px 0;
+    }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--text-dim); font-size: 13px; }
+    .error {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-dim);
+    }
+    .error .icon { font-size: 40px; margin-bottom: 12px; }
+    .ranking-list { padding: 16px 0; }
+    .rank-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      margin-bottom: 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .rank-item:hover {
+      transform: translateX(4px);
+      border-color: rgba(255, 51, 102, 0.3);
+    }
+    .rank-item.top-1 {
+      background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,215,0,0.02));
+      border-color: rgba(255,215,0,0.25);
+    }
+    .rank-item.top-2 {
+      background: linear-gradient(135deg, rgba(192,192,192,0.08), rgba(192,192,192,0.02));
+      border-color: rgba(192,192,192,0.2);
+    }
+    .rank-item.top-3 {
+      background: linear-gradient(135deg, rgba(205,127,50,0.08), rgba(205,127,50,0.02));
+      border-color: rgba(205,127,50,0.2);
+    }
+    .rank-num {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 14px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-dim);
+    }
+    .top-1 .rank-num { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #1a1a2e; }
+    .top-2 .rank-num { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: #1a1a2e; }
+    .top-3 .rank-num { background: linear-gradient(135deg, #cd7f32, #a06020); color: #1a1a2e; }
+    .rank-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 2px solid var(--border);
+    }
+    .top-1 .rank-avatar { border-color: var(--gold); }
+    .top-2 .rank-avatar { border-color: var(--silver); }
+    .top-3 .rank-avatar { border-color: var(--bronze); }
+    .avatar-placeholder {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--text-dim);
+    }
+    .rank-user {
+      flex: 1;
+      min-width: 0;
+    }
+    .rank-username {
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rank-displayname {
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+    .rank-points {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--accent2);
+      white-space: nowrap;
+      letter-spacing: -0.5px;
+    }
+    .top-1 .rank-points { color: var(--gold); }
+    .footer {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .rank-item {
+      animation: fadeIn 0.3s ease-out both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="event-name" id="eventName">🏆 LIVE RANKING</div>
+      <div class="event-period" id="eventPeriod"></div>
+      <div class="live-badge">
+        <span class="live-dot"></span>
+        <span>LIVE更新中</span>
+      </div>
+      <div class="update-info" id="updateInfo">読み込み中...</div>
+      <div class="header-divider"></div>
+    </div>
+    <div id="content"></div>
+    <div class="footer">
+      自動更新: 30秒ごと
+    </div>
+  </div>
+
+  <script>
+    // ★ マスタGAS URL（全イベント共通の1つ） ★
+    const MASTER_GAS_URL = 'https://script.google.com/macros/s/AKfycbwUqGXKq9IDqo0WqAlJ1j8EJphWYjPvAXBZw6CALKL8zBYR1hwXQxoPeiPqTu_3FcOnPQ/exec';
+
+    const REFRESH_SEC = 30;
+    let countdownTimer = null;
+    let countdown = REFRESH_SEC;
+    let isFetching = false;
+
+    // URLパラメータからイベント識別子を取得
+    function getEventIdentifier() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('event') || params.get('id') || '1';
+    }
+
+    function init() {
+      fetchRanking();
+      countdown = REFRESH_SEC;
+      countdownTimer = setInterval(() => {
+        countdown--;
+        const el = document.getElementById('countdownVal');
+        if (el) el.textContent = countdown;
+        if (countdown <= 0 && !isFetching) {
+          countdown = REFRESH_SEC;
+          fetchRanking();
+        }
+      }, 1000);
+    }
+
+    function formatEventPeriod(raw) {
+      if (!raw) return '';
+      let s = raw.replace(/\s*\(UTC[^\)]*\)/g, '');
+      s = s.replace(/(\d{2}\/\d{2})\/\d{4}/g, '$1');
+      return s.trim();
+    }
+
+    // テーマ適用: GASから受け取ったテーマ情報をCSS変数に反映する
+    let loadedFontFamilies = new Set();
+    function applyTheme(theme) {
+      if (!theme) return;
+      const root = document.documentElement;
+
+      // 色の適用（空欄時はデフォルトのまま）
+      if (theme.colorMain) {
+        root.style.setProperty('--accent', theme.colorMain);
+      }
+      if (theme.colorAccent) {
+        root.style.setProperty('--accent2', theme.colorAccent);
+      }
+      if (theme.colorBg) {
+        root.style.setProperty('--bg', theme.colorBg);
+      }
+
+      // フォントの適用（Google Fontsから動的ロード）
+      if (theme.font) {
+        const fontName = theme.font.trim();
+        if (!loadedFontFamilies.has(fontName)) {
+          loadedFontFamilies.add(fontName);
+          const fontUrlName = fontName.replace(/ /g, '+');
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = `https://fonts.googleapis.com/css2?family=${fontUrlName}:wght@400;700;900&display=swap`;
+          document.head.appendChild(link);
+        }
+        // body に反映
+        document.body.style.fontFamily = `'${fontName}', 'Noto Sans JP', -apple-system, sans-serif`;
+      }
+    }
+
+    async function fetchRanking() {
+      isFetching = true;
+      const content = document.getElementById('content');
+      const updateInfo = document.getElementById('updateInfo');
+
+      if (!content.innerHTML) {
+        content.innerHTML = `
+          <div class="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">ランキングを取得中...</div>
+          </div>
+        `;
+      }
+
+      try {
+        const eventId = getEventIdentifier();
+        const url = MASTER_GAS_URL + '?action=ranking&event=' + encodeURIComponent(eventId);
+        const res = await fetch(url);
+        const data = await res.json();
+
+        // テーマ情報を最優先で適用（エラー時や空データ時も反映させる）
+        if (data.theme) {
+          applyTheme(data.theme);
+        }
+
+        if (data.status === 'error') {
+          content.innerHTML = `
+            <div class="error">
+              <div class="icon">⚠️</div>
+              <p>${escapeHtml(data.message || 'エラーが発生しました')}</p>
+              <p style="margin-top:8px;font-size:12px;">イベントID: ${escapeHtml(eventId)}</p>
+            </div>
+          `;
+          return;
+        }
+
+        if (!data.rankings || data.rankings.length === 0) {
+          if (data.eventName) {
+            document.getElementById('eventName').textContent = data.eventName;
+          }
+          content.innerHTML = `
+            <div class="error">
+              <div class="icon">📊</div>
+              <p>まだランキングデータがありません</p>
+              <p style="margin-top:8px;font-size:12px;">Chrome拡張からデータを送信してください</p>
+            </div>
+          `;
+          return;
+        }
+
+        if (data.eventName) {
+          document.getElementById('eventName').textContent = data.eventName;
+          document.title = data.eventName + ' - LIVE ランキング';
+        }
+        if (data.eventPeriod) {
+          document.getElementById('eventPeriod').textContent = formatEventPeriod(data.eventPeriod);
+        }
+
+        renderRanking(data.rankings);
+
+        const lastUpdate = data.lastUpdate
+          ? new Date(data.lastUpdate).toLocaleTimeString('ja-JP')
+          : '-';
+        countdown = REFRESH_SEC;
+        updateInfo.innerHTML = `データ更新: ${lastUpdate} ｜ 次回更新: <span id="countdownVal">${REFRESH_SEC}</span>秒後`;
+
+      } catch (error) {
+        console.error('Fetch error:', error);
+        if (!content.querySelector('.rank-item')) {
+          content.innerHTML = `
+            <div class="error">
+              <div class="icon">⚠️</div>
+              <p>データの取得に失敗しました</p>
+              <p style="margin-top:8px;font-size:12px;">${escapeHtml(error.message)}</p>
+            </div>
+          `;
+        }
+      } finally {
+        isFetching = false;
+      }
+    }
+
+    function renderRanking(rankings) {
+      const content = document.getElementById('content');
+      rankings.sort((a, b) => (b.points || 0) - (a.points || 0));
+      let html = '<div class="ranking-list">';
+
+      rankings.forEach((item, index) => {
+        const rank = index + 1;
+        const topClass = rank <= 3 ? ` top-${rank}` : '';
+        const delay = index * 0.05;
+        const points = (item.points || 0).toLocaleString();
+
+        let avatarHtml = '';
+        if (item.avatar) {
+          avatarHtml = `<img class="rank-avatar" src="${escapeAttr(item.avatar)}" alt="" onerror="this.outerHTML='<div class=\\'avatar-placeholder\\'>👤</div>'">`;
+        } else {
+          avatarHtml = `<div class="avatar-placeholder">👤</div>`;
+        }
+
+        html += `
+          <div class="rank-item${topClass}" style="animation-delay: ${delay}s">
+            <div class="rank-num">${rank}</div>
+            ${avatarHtml}
+            <div class="rank-user">
+              <div class="rank-username">${escapeHtml(item.username)}</div>
+              ${item.displayName && item.displayName !== item.username
+                ? `<div class="rank-displayname">${escapeHtml(item.displayName)}</div>`
+                : ''}
+            </div>
+            <div class="rank-points">${points} pt</div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text == null ? '' : text;
+      return div.innerHTML;
+    }
+
+    function escapeAttr(text) {
+      return String(text).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    init();
+  </script>
+</body>
+</html>
