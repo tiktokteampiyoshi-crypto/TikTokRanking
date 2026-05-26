@@ -153,6 +153,19 @@
     .top-1 .rank-num { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #1a1a2e; }
     .top-2 .rank-num { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: #1a1a2e; }
     .top-3 .rank-num { background: linear-gradient(135deg, #cd7f32, #a06020); color: #1a1a2e; }
+    .rank-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+    .rank-link:hover .rank-username {
+      color: var(--accent2);
+    }
     .rank-avatar {
       width: 40px;
       height: 40px;
@@ -186,6 +199,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      transition: color 0.2s;
     }
     .rank-displayname {
       font-size: 11px;
@@ -396,6 +410,7 @@
         const topClass = rank <= 3 ? ` top-${rank}` : '';
         const delay = index * 0.05;
         const points = (item.points || 0).toLocaleString();
+        const tiktokUrl = `https://www.tiktok.com/@${encodeURIComponent(item.username)}`;
 
         let avatarHtml = '';
         if (item.avatar) {
@@ -407,13 +422,15 @@
         html += `
           <div class="rank-item${topClass}" style="animation-delay: ${delay}s">
             <div class="rank-num">${rank}</div>
-            ${avatarHtml}
-            <div class="rank-user">
-              <div class="rank-username">${escapeHtml(item.username)}</div>
-              ${item.displayName && item.displayName !== item.username
-                ? `<div class="rank-displayname">${escapeHtml(item.displayName)}</div>`
-                : ''}
-            </div>
+            <a class="rank-link" href="${escapeAttr(tiktokUrl)}" target="_blank" rel="noopener">
+              ${avatarHtml}
+              <div class="rank-user">
+                <div class="rank-username">${escapeHtml(item.username)}</div>
+                ${item.displayName && item.displayName !== item.username
+                  ? `<div class="rank-displayname">${escapeHtml(item.displayName)}</div>`
+                  : ''}
+              </div>
+            </a>
             <div class="rank-points">${points} pt</div>
           </div>
         `;
